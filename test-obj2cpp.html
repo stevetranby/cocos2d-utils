@@ -1,0 +1,127 @@
+<html>
+<head>
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="objc2cpp.js"></script>
+<script>
+$(document).ready(function() {
+    $('#convert').click(function() {
+        var input = $('#input').val();
+        var preprocessed = objc2cpp.preprocess(input);
+        var converted = objc2cpp.convert(preprocessed);
+        $('#output').text(converted);
+    });
+});
+</script>
+</head>
+<body>
+<h4>cocos2d objc->cpp transform</h4>
+<textarea id="input" rows="15" cols="70" wrap="off">
+// Some sample test code
+
+- (  void  )  test  ;
+
+[self.me asdf];
+int a = self.asdf;
+[poo self.tasdf];
+self.asdf=3;
+self.test = 100;
+
++(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3;
+- (CGFloat) horzSpeedWithPosition  : ( CGPoint) pos;
+- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2;
+- (void) layerPanZoom: (STLayerPanZoom *) sender  clickedAtPoint: (CGPoint) aPoint tapCount: (NSUInteger) tapCount;
+- (void) layerPanZoom: (STLayerPanZoom *) sender 
+       clickedAtPoint: (CGPoint) aPoint
+             tapCount: (NSUInteger) tapCount;
+
++(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3 
+{
+}
+- (CGFloat) horzSpeedWithPosition  : ( CGPoint) pos
+{
+}
+- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2 {
+}
+
+- (void) layerPanZoom: (STLayerPanZoom *) sender 
+       clickedAtPoint: (CGPoint) aPoint
+             tapCount: (NSUInteger) tapCount
+{
+}
+
+
+#import "cocos2d.h"
+#import "CCBReader.h"
+#import "SimpleAudioEngine.h"
+
+@interface ClassName: CCNode
+@property (readwrite, retain) NSMutableArray *touches;
+@property (readwrite, assign) BOOL isDisabled;
+@end
+
+@interface ClassNameOne (category)
+@property (readwrite, retain) NSMutableArray *touches;
+@end
+
+@interface ClassNameTwo ()
+{
+    NSMutableArray* _memberOne;
+    NSMutableArray* _memberTwo;
+}
++(EventManager*)sharedManager;
+@property (readwrite, retain) NSMutableArray *touches;
+@property (readwrite, assign) CGFloat touchDistance;
+
++(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3;
+- (CGFloat) horzSpeedWithPosition: (CGPoint) pos;
+- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2;
+- (void) layerPanZoom: (STLayerPanZoom *) sender 
+       clickedAtPoint: (CGPoint) aPoint
+             tapCount: (NSUInteger) tapCount;
+@end
+
+@implementation ClassName
+
+-(CCAnimation*)addAnimationWithName:(NSString*)animName
+                             Format:(NSString*)animFormat
+                             Frames:(NSString*)animFrames
+                              Delay:(float)animDelay
+{
+    if([_animationConfigs objectForKey:animName])
+        return;
+
+    id dict = [NSDictionary dictionaryWithObjectsAndKeys:
+               animFormat, @"format",
+               animName, @"name",
+               animFrames, @"frames",
+               @(animDelay), @"delay",
+               nil];
+
+    [_animationConfigs setObject:dict forKey:animName];
+
+    return [animCache animationByName:animName];
+}
+
+- (void) ccTouchesEnded: (NSSet *) touches 
+              withEvent: (UIEvent *) event
+{
+    self.speed = 100;
+    self.position = ccp(3,4);
+    UITouch *touch2 = [self.touches objectAtIndex: 1];
+    CGPoint curPosTouch1 = [[CCDirector sharedDirector] convertToGL: [touch1 locationInView: [touch1 view]]];
+    [self.delegate layerPanZoom: self
+                 clickedAtPoint: [self convertToNodeSpace: curPos]
+                       tapCount: [touch tapCount]];
+}
+
+@end
+
+@protocol MyProtocol
+@optional
+@end
+</textarea>
+<div><button id="convert">Convert</button></div>
+<textarea id="output" rows="30" cols="70" wrap="off"></textarea>
+</body>
+</html>
