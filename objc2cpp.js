@@ -12,6 +12,9 @@
 // - use positive instead of negative character sets, i.e. [a-z] instead of [^\s;] for types/vars/params
 // - use more selective boundary conditions where possible
 //
+// Todo:
+// - for(var in array)
+// - array/dict literals
 //---------------------------------------------------------------------------  
 
 (function(exports) {
@@ -63,61 +66,9 @@
         var selfSetReplace = function(match, p1, p2) {
             return "this->set" + p1.charAt(0).toUpperCase() + p1.substr(1) + "(" + p2 + ")";
         };
-        o = o.replace(/self.([^\s=;]+)\s*=\s*([^;=]+)/g, selfSetReplace);
-        o = o.replace(/self.([^\s=\];]+)\s/g, selfGetReplace);
+        o = o.replace(/self.([\w]+)\s*=\s*([^;=]+)/g, selfSetReplace);
+        o = o.replace(/self.([\w]+)\s/g, selfGetReplace);
 
-
-
-        ////////////////////////////////////////////////////////////////////////////////////
-        // METHOD DECLARATIONS
-        //
-        // note: this currently creates _ delimited function names so
-        //
-        //   -(CCSprite*)myMethod:(int)arg1 Another:(float)arg2 {
-        //
-        // becomes:
-        //
-        //   CCSprite* myMethod(int arg1, float arg2) {
-        //
-        // it could become:
-        //   CCSprite* myMethod_Another(int arg1, float arg2) {
-        //
-        ////////////////////////////////////////////////////////////////////////////////////
-
-        var startPattern = "\\s*\\(\\s*([^ ]+)\\s*\\)\\s*([^ ]+)\\s*";
-        var startReplace = "$1 $2(";
-        var paramPatternFirst = ":\\s*\\(\\s*([^:) ]+\\s?\\*?)\\s*\\)\\s*([^: \\n]+)\\s*";
-        var paramPattern = "\\s+[^: ]+\\s*:\\s*\\(\\s*([^:) ]+\\s?\\*?)\\s*\\)\\s*([^: \\n]+)\\s*";
-
-        var nParams = 5;
-        for (var i = nParams; i >= 0; --i) {
-            for (var start = 0; start < 2; ++start) {
-                for (var end = 0; end < 2; ++end) {
-                    var startChar = start === 0 ? "-" : "\\+";
-                    var startReplaceChar = start === 0 ? "" : "static ";
-                    var endPattern = end === 0 ? ";" : "{";
-                    var endReplace = end === 0 ? ");" : ")\n{";
-
-                    var pattern = "";
-                    if (i > 1) pattern = startChar + startPattern + paramPatternFirst + paramPattern.repeat(i - 1) + endPattern;
-                    else if (i == 1) pattern = startChar + startPattern + paramPatternFirst + endPattern;
-                    else pattern = startChar + startPattern + endPattern;
-
-                    console.log(pattern);
-                    var regex = new RegExp(pattern, "g");
-
-                    var paramReplaces = [];
-                    for (var j = 0; j < i; ++j) {
-                        var a = 3 + j * 2;
-                        var b = 4 + j * 2;
-                        paramReplaces.push("$" + a + " $" + b);
-                    }
-                    var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
-                    console.log(replacement);
-                    o = o.replace(regex, replacement);
-                }
-            }
-        }
 
         ////////////////////////////////////////////////////////////////////////////////////
         // METHOD CALLS
@@ -127,13 +78,16 @@
         // 
         ////////////////////////////////////////////////////////////////////////////////////
 
-        // TODO: repeat this XX times (prob 8 is enough)
-        for (var repeat = 3; repeat >= 0; --repeat) {
+        // TODO: repeat this XX times (prob 3 is enough, should preprocess source if need more)
+        // - convert multiple nested calls into separate temporary variables
+        for (var repeat = 6; repeat >= 0; --repeat) {
             // helper to get method calls 
             o = o.replace(/\[([^\]\[]+)\]/g, "--*$1=--");
 
-            var startPatternA = "--\\*([A-Z][A-Z]?[^=\\n]+)\\s+([^=\\n]+)";
-            var startPatternB = "--\\*([^=\\n]+)\\s+([^=\\n]*)";
+            // var startPatternA = "--\\*([A-Z][A-Z]?[^=\\n]+)\\s+([^=\\n]+)";
+            // var startPatternB = "--\\*([^=\\n]+)\\s+([^=\\n]*)";
+            var startPatternA = "--\\*([A-Z][A-Z]?\\w+)\\s+([\\w.]+)";
+            var startPatternB = "--\\*([^=\\n]+)\\s+([\\w.]+)";
             var startReplaceA = "$1::$2(";
             var startReplaceB = "$1->$2(";
             var endPattern2 = "=--";
@@ -178,6 +132,62 @@
                 o = o.replace(regexB, replacementB);
             }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        // METHOD DECLARATIONS
+        //
+        // note: this currently creates _ delimited function names so
+        //
+        //   -(CCSprite*)myMethod:(int)arg1 Another:(float)arg2 {
+        //
+        // becomes:
+        //
+        //   CCSprite* myMethod(int arg1, float arg2) {
+        //
+        // it could become:
+        //   CCSprite* myMethod_Another(int arg1, float arg2) {
+        //
+        ////////////////////////////////////////////////////////////////////////////////////
+
+        var startPattern = "\\s*\\(\\s*([^\\s\\n]+)\\s*\\)\\s*([^\\s\\n]+)\\s*";
+        var startReplace = "$1 $2(";
+        var paramPatternFirst = ":\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:\\s\\n]+)\\s*";
+        var paramPattern = "\\s+[^:\\s]+\\s*:\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:\\s\\n]+)\\s*";
+
+        var nParams = 5;
+        for (var i = nParams; i >= 0; --i) {
+            for (var start = 0; start < 2; ++start) {
+                for (var end = 0; end < 2; ++end) {
+                    var startChar = start === 0 ? "-" : "\\+";
+                    var startReplaceChar = start === 0 ? "" : "static ";
+                    var endPattern = end === 0 ? ";" : "{";
+                    var endReplace = end === 0 ? ");" : ")\n{";
+
+                    var pattern = "";
+                    if (i > 1) pattern = startChar + startPattern + paramPatternFirst + paramPattern.repeat(i - 1) + endPattern;
+                    else if (i == 1) pattern = startChar + startPattern + paramPatternFirst + endPattern;
+                    else pattern = startChar + startPattern + endPattern;
+
+                    console.log(pattern);
+                    var regex = new RegExp(pattern, "g");
+
+                    var paramReplaces = [];
+                    for (var j = 0; j < i; ++j) {
+                        var a = 3 + j * 2;
+                        var b = 4 + j * 2;
+                        paramReplaces.push("$" + a + " $" + b);
+                    }
+                    var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
+                    console.log(replacement);
+                    o = o.replace(regex, replacement);
+                }
+            }
+        }
+
+
+        // CCDictionary dictionaryWithObjectsAndKeys:
+        o = o.replace(/--\*([A-Z][A-Z]?\w+)\s+([\w.]+):([^:=]+)=--/g, "$1::$2($3)");
+
 
         ////////////////////////////////////////////////////////////////////////////////////
         // CLASS INTERFACE & IMPLEMENTATION

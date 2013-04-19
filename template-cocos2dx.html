@@ -1,0 +1,27 @@
+<html>
+<head>
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="objc2cpp.js"></script>
+<script>
+$(document).ready(function() {
+    $('#create').click(function() {
+        var input = $('#input').val();
+        var preprocessed = objc2cpp.preprocess(input);
+        var converted = objc2cpp.convert(preprocessed);
+        var interface = "";
+        var implementation = "";
+        $('#outputHead').text(interface);
+        $('#outputHead').text(implementation);
+    });
+});
+</script>
+</head>
+<body>
+<h4>cocos2d objc->cpp transform</h4>
+<input type="text" id="classname" />
+<button id="create" />
+<textarea id="outputHead" rows="20" cols="100"></textarea>
+<textarea id="outputImpl" rows="20" cols="100"></textarea>
+</body>
+</html>
