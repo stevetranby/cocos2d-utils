@@ -1,15 +1,17 @@
 // 
 // Author: Steve Tranby
 //
-// Notes: 
+// Regex Optimization Ideas:
 // - naive implementation, so this is not optimized at all
 // - regular expression also somewhat naive and should be improved
 // - currently replace is called on the entire source input for every type of code "feature"
-//
-// Regex Optimization Ideas:
+// - perform replace for simple string to string on entire input with global flag "g" 
+// - test calling replace with regex on every line instead of entire input for complex exprs
+// - test preprocessing the original source into one line statements to allow using ^ and $ and "m" flag
+//   (so all method declarations, calls, and signatures should have no newlines in the middle)
 // - use positive instead of negative character sets, i.e. [a-z] instead of [^\s;] for types/vars/params
 // - use more selective boundary conditions where possible
-// 
+//
 //---------------------------------------------------------------------------  
 
 (function(exports) {
