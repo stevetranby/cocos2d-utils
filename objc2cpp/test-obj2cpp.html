@@ -7,8 +7,7 @@
 $(document).ready(function() {
     $('#convert').click(function() {
         var input = $('#input').val();
-        var preprocessed = objc2cpp.preprocess(input);
-        var converted = objc2cpp.convert(preprocessed);
+        var converted = objc2cpp.convert(input);
         $('#output').text(converted);
     });
 });
@@ -17,7 +16,25 @@ $(document).ready(function() {
 <body>
 <h4>cocos2d objc->cpp transform</h4>
 <textarea id="input" rows="15" cols="70" wrap="off">
-// Some sample test code
+-(void)hideTokenChestButton;
+-(void)showTokenChestButton;
+
+-(void)showTokenChest;
+-(void)showBuildRoomMenu:(NSString*)roomTypeName;
+-(void)showRoomDetailsMenu:(SCRoom*)room;
+-(void)showNavigationMenu;
+-(void)showResearchMenu;
+-(void)showHireCrewMenu;
+-(void)showSettingsMenu;
+-(void)showCrewDetailsWithCrew:(CrewMember*)crew;
+-(void)showHailWithDict:(NSDictionary*)dict Delegate:(id)delegate;
+</textarea>
+<div><button id="convert">Convert</button></div>
+<textarea id="output" rows="30" cols="70" wrap="off"></textarea>
+</body>
+</html>
+<!--
+  // Some sample test code
 
 - (  void  )  test  ;
 
@@ -120,8 +137,5 @@ self.test = 100;
 @protocol MyProtocol
 @optional
 @end
-</textarea>
-<div><button id="convert">Convert</button></div>
-<textarea id="output" rows="30" cols="70" wrap="off"></textarea>
-</body>
-</html>
+
+-->

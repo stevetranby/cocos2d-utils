@@ -30,20 +30,30 @@
         this.options = opts || {};
     };
 
+    // Translate objc -> objc
     // remove newlines within a method/declaration/etc
     exports.preprocess = function(input) {
         var o = input;
         return o;
     };
 
-    // interfaces
-    exports.firstPass = function() {
+    // Stuff that should be done before the main pass "convert"
+    exports.firstPass = function(input) {
         var o = input;
+        
+        console.log("in firstPass");
+
+        // id to bool for Return Value (better practice)
+        o = o.replace(/\+\(\s*id\s*\)/g, "+(bool)");
+        o = o.replace(/-\(\s*id\s*\)/g, "-(bool)");
+        // id to CCObject* for object pointer as param or assignment
+        o = o.replace(/\bid\b/g, "CCObject*");
+
         return o;
     };
 
     // implementations
-    exports.secondPass = function() {
+    exports.secondPass = function(input) {
         var o = input;
         return o;
     };
@@ -57,7 +67,12 @@
 
     exports.convert = function(input) {
 
-        var o = input;
+        console.clear();
+
+        console.log("input = " + input);
+
+        var o = this.firstPass(input);
+        o = this.secondPass(o);
 
         // believe this must occur before method calls
         var selfGetReplace = function(match, p1) {
@@ -69,7 +84,6 @@
         o = o.replace(/self.([\w]+)\s*=\s*([^;=]+)/g, selfSetReplace);
         o = o.replace(/self.([\w]+)\s/g, selfGetReplace);
 
-
         ////////////////////////////////////////////////////////////////////////////////////
         // METHOD CALLS
         //
@@ -80,6 +94,7 @@
 
         // TODO: repeat this XX times (prob 3 is enough, should preprocess source if need more)
         // - convert multiple nested calls into separate temporary variables
+
         for (var repeat = 6; repeat >= 0; --repeat) {
             // helper to get method calls 
             o = o.replace(/\[([^\]\[]+)\]/g, "--*$1=--");
@@ -96,40 +111,45 @@
             var paramPatternFirst2 = ":\\s*([^:=\\n]+)";
             var paramPatternExtra = "\\s+[^:=\\n]*:\\s*([^:=\\n]+)";
 
-            var nParams2 = 5;
-            for (var i2 = nParams2; i2 >= 0; --i2) {
+            if (o.match(new RegExp(startPatternA)) || o.match(new RegExp(startPatternB))) {
 
-                var patternA = "";
-                if (i2 > 1) patternA = startPatternA + paramPatternFirst2 + paramPatternExtra.repeat(i2 - 1) + endPattern2;
-                else if (i2 == 1) patternA = startPatternA + paramPatternFirst2 + endPattern2;
-                else patternA = startPatternA + endPattern2;
+                console.log("found match for method call");
 
-                console.log(patternA);
-                var regexA = new RegExp(patternA, "g");
+                var nParams2 = 5;
+                for (var i2 = nParams2; i2 >= 0; --i2) {
 
-                var paramReplacesA = [];
-                for (var j2 = 0; j2 < i2; ++j2) {
-                    var a2 = 3 + j2;
-                    paramReplacesA.push("$" + a2);
+                    var patternA = "";
+                    if (i2 > 1) patternA = startPatternA + paramPatternFirst2 + paramPatternExtra.repeat(i2 - 1) + endPattern2;
+                    else if (i2 == 1) patternA = startPatternA + paramPatternFirst2 + endPattern2;
+                    else patternA = startPatternA + endPattern2;
+
+                    //console.log(patternA);
+                    var regexA = new RegExp(patternA, "g");
+
+                    var paramReplacesA = [];
+                    for (var j2 = 0; j2 < i2; ++j2) {
+                        var a2 = 3 + j2;
+                        paramReplacesA.push("$" + a2);
+                    }
+
+                    var replacementA = startReplaceA + paramReplacesA.join(", ") + endReplace2;
+                    //console.log(replacementA);
+                    o = o.replace(regexA, replacementA);
+
+                    var patternB = "";
+                    if (i2 > 1) patternB = startPatternB + paramPatternFirst2 + paramPatternExtra.repeat(i2 - 1) + endPattern2;
+                    else if (i2 == 1) patternB = startPatternB + paramPatternFirst2 + endPattern2;
+                    else patternB = startPatternB + endPattern2;
+
+                    var regexB = new RegExp(patternB, "g");
+                    var paramReplacesB = [];
+                    for (var jB = 0; jB < i2; ++jB) {
+                        var aB = 3 + jB;
+                        paramReplacesB.push("$" + aB);
+                    }
+                    var replacementB = startReplaceB + paramReplacesB.join(", ") + endReplace2;
+                    o = o.replace(regexB, replacementB);
                 }
-
-                var replacementA = startReplaceA + paramReplacesA.join(", ") + endReplace2;
-                console.log(replacementA);
-                o = o.replace(regexA, replacementA);
-
-                var patternB = "";
-                if (i2 > 1) patternB = startPatternB + paramPatternFirst2 + paramPatternExtra.repeat(i2 - 1) + endPattern2;
-                else if (i2 == 1) patternB = startPatternB + paramPatternFirst2 + endPattern2;
-                else patternB = startPatternB + endPattern2;
-
-                var regexB = new RegExp(patternB, "g");
-                var paramReplacesB = [];
-                for (var jB = 0; jB < i2; ++jB) {
-                    var aB = 3 + jB;
-                    paramReplacesB.push("$" + aB);
-                }
-                var replacementB = startReplaceB + paramReplacesB.join(", ") + endReplace2;
-                o = o.replace(regexB, replacementB);
             }
         }
 
@@ -149,45 +169,47 @@
         //
         ////////////////////////////////////////////////////////////////////////////////////
 
-        var startPattern = "\\s*\\(\\s*([^\\s\\n]+)\\s*\\)\\s*([^\\s\\n]+)\\s*";
+        var startPattern = "\\s*\\(\\s*([^\\s\\n]+)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
         var startReplace = "$1 $2(";
-        var paramPatternFirst = ":\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:\\s\\n]+)\\s*";
-        var paramPattern = "\\s+[^:\\s]+\\s*:\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:\\s\\n]+)\\s*";
+        var paramPatternFirst = ":\\s*\\(\\s*([^:;)\\s]+\\s?\\*?)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
+        var paramPattern = "\\s+[^:;\\s]+\\s*:\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
 
-        var nParams = 5;
-        for (var i = nParams; i >= 0; --i) {
-            for (var start = 0; start < 2; ++start) {
-                for (var end = 0; end < 2; ++end) {
-                    var startChar = start === 0 ? "-" : "\\+";
-                    var startReplaceChar = start === 0 ? "" : "static ";
-                    var endPattern = end === 0 ? ";" : "{";
-                    var endReplace = end === 0 ? ");" : ")\n{";
+        if (o.match(new RegExp(startPattern))) {
 
-                    var pattern = "";
-                    if (i > 1) pattern = startChar + startPattern + paramPatternFirst + paramPattern.repeat(i - 1) + endPattern;
-                    else if (i == 1) pattern = startChar + startPattern + paramPatternFirst + endPattern;
-                    else pattern = startChar + startPattern + endPattern;
+            console.log("found match for method declaration/signature");
 
-                    console.log(pattern);
-                    var regex = new RegExp(pattern, "g");
+            var nParams = 5;
+            for (var i = nParams; i >= 0; --i) {
+                for (var start = 0; start < 2; ++start) {
+                    for (var end = 0; end < 2; ++end) {
+                        var startChar = start === 0 ? "-" : "\\+";
+                        var startReplaceChar = start === 0 ? "" : "static ";
+                        var endPattern = end === 0 ? ";" : "{";
+                        var endReplace = end === 0 ? ");" : ")\n{";
 
-                    var paramReplaces = [];
-                    for (var j = 0; j < i; ++j) {
-                        var a = 3 + j * 2;
-                        var b = 4 + j * 2;
-                        paramReplaces.push("$" + a + " $" + b);
+                        var pattern = "";
+                        if (i > 1) pattern = startChar + startPattern + paramPatternFirst + paramPattern.repeat(i - 1) + endPattern;
+                        else if (i == 1) pattern = startChar + startPattern + paramPatternFirst + endPattern;
+                        else pattern = startChar + startPattern + endPattern;
+
+                        //console.log(pattern);
+                        var regex = new RegExp(pattern, "g");
+
+                        var paramReplaces = [];
+                        for (var j = 0; j < i; ++j) {
+                            var a = 3 + j * 2;
+                            var b = 4 + j * 2;
+                            paramReplaces.push("$" + a + " $" + b);
+                        }
+                        var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
+                        //console.log(replacement);
+                        o = o.replace(regex, replacement);
                     }
-                    var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
-                    console.log(replacement);
-                    o = o.replace(regex, replacement);
                 }
             }
         }
-
-
         // CCDictionary dictionaryWithObjectsAndKeys:
         o = o.replace(/--\*([A-Z][A-Z]?\w+)\s+([\w.]+):([^:=]+)=--/g, "$1::$2($3)");
-
 
         ////////////////////////////////////////////////////////////////////////////////////
         // CLASS INTERFACE & IMPLEMENTATION
@@ -261,16 +283,6 @@
         //
         ////////////////////////////////////////////////////////////////////////////////////
 
-        // id to bool for Return Value (better practice)
-        o = o.replace(/\(\s*id\s*\)/g, "(bool)");
-
-        // id to void* for return value (direct translate)
-        o = o.replace(/\(\s*id\s*\)/g, "(void*)");
-
-        // id to void* for object pointer as param or assignment
-        o = o.replace(/\(id\s/g, "(void* ");
-        o = o.replace(/id\s+([^= ]+)\s?=/g, "void* $1 =");
-
         // GENERAL
         o = o.replace(/@"/g, "\"");
         o = o.replace(/import/g, "include");
@@ -307,6 +319,10 @@
         o = o.replace(/NSDictionary/g, "CCDictionary");
         o = o.replace(/NSMutableDictionary/g, "CCDictionary");
         o = o.replace(/NSString/g, "CCString");
+
+        // YOUR OWN CUSTOM REPLACEMENTS
+        o = o.replace(/SCLabel/g, "CCLabelBMFont");
+        o = o.replace(/CCLabelTTF/g, "CCLabelBMFont");
 
         // REMOVE SYNTAX
         // @class ...

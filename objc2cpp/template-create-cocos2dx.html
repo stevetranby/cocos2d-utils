@@ -7,12 +7,11 @@
 $(document).ready(function() {
     $('#create').click(function() {
         var input = $('#input').val();
-        var preprocessed = objc2cpp.preprocess(input);
-        var converted = objc2cpp.convert(preprocessed);
-        var interface = "";
-        var implementation = "";
-        $('#outputHead').text(interface);
-        $('#outputHead').text(implementation);
+        var converted = objc2cpp.convert(input);
+        var classHeader = "";
+        var classImpl = "";
+        $('#outputHead').text(classHeader);
+        $('#outputImpl').text(classImpl);
     });
 });
 </script>
