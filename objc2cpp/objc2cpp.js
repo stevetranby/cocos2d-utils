@@ -5,7 +5,7 @@
 // - naive implementation, so this is not optimized at all
 // - regular expression also somewhat naive and should be improved
 // - currently replace is called on the entire source input for every type of code "feature"
-// - perform replace for simple string to string on entire input with global flag "g" 
+// - perform replace for simple string to string on entire input with global flag "g"
 // - test calling replace with regex on every line instead of entire input for complex exprs
 // - test preprocessing the original source into one line statements to allow using ^ and $ and "m" flag
 //   (so all method declarations, calls, and signatures should have no newlines in the middle)
@@ -15,7 +15,7 @@
 // Todo:
 // - for(var in array)
 // - array/dict literals
-//---------------------------------------------------------------------------  
+//---------------------------------------------------------------------------
 
 (function(exports) {
 
@@ -48,6 +48,10 @@
         o = o.replace(/-\(\s*id\s*\)/g, "-(bool)");
         // id to CCObject* for object pointer as param or assignment
         o = o.replace(/\bid\b/g, "CCObject*");
+
+        // CUSTOM: I was using ccs() macro in iphone code to mean CGSizeMake()
+        //         could switch to ccz() instead as seen elsewhere in others' extensions
+        o = o.replace(/ccs\(/g, "CCSize(");
 
         return o;
     };
@@ -89,14 +93,14 @@
         //
         // [Class classWith:param1 n2:p2  n3:p3] -> Class::classWith(param1,p2,p3);
         // [Class classWith] -> Class::classWith()
-        // 
+        //
         ////////////////////////////////////////////////////////////////////////////////////
 
         // TODO: repeat this XX times (prob 3 is enough, should preprocess source if need more)
         // - convert multiple nested calls into separate temporary variables
 
-        for (var repeat = 6; repeat >= 0; --repeat) {
-            // helper to get method calls 
+        for (var repeat = 10; repeat >= 0; --repeat) {
+            // helper to get method calls
             o = o.replace(/\[([^\]\[]+)\]/g, "--*$1=--");
 
             // var startPatternA = "--\\*([A-Z][A-Z]?[^=\\n]+)\\s+([^=\\n]+)";
@@ -115,7 +119,7 @@
 
                 console.log("found match for method call");
 
-                var nParams2 = 5;
+                var nParams2 = 7;
                 for (var i2 = nParams2; i2 >= 0; --i2) {
 
                     var patternA = "";
@@ -178,7 +182,7 @@
 
             console.log("found match for method declaration/signature");
 
-            var nParams = 5;
+            var nParams = 7;
             for (var i = nParams; i >= 0; --i) {
                 for (var start = 0; start < 2; ++start) {
                     for (var end = 0; end < 2; ++end) {
@@ -283,6 +287,10 @@
         //
         ////////////////////////////////////////////////////////////////////////////////////
 
+        // Create Methods
+        o = o.replace(/CCArray::array\(/g, "CCArray::create(");
+        o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
+
         // GENERAL
         o = o.replace(/@"/g, "\"");
         o = o.replace(/import/g, "include");
@@ -291,10 +299,13 @@
         o = o.replace(/BOOL/g, "bool");
         o = o.replace(/NO/g, "false");
         o = o.replace(/nil/g, "NULL");
+        o = o.replace(/ccTime/g, "double");
+        o = o.replace(/GLfloat/g, "float");
+        
 
         // keep cocos2d:: prefix if header file
         // CGFloat => float
-        // CGPointMake => cocos2d::CCPointMake 
+        // CGPointMake => cocos2d::CCPointMake
         // CGSizeMake => cocos2d::CCSizeMake
         // CGRectMake => cocos2d::CCRectMake
         // CGPoint => cocos2d::CCPoint
@@ -330,6 +341,17 @@
 
         o = o.replace(/@class /g, "class ");
         o = o.replace(/@end/g, "");
+
+        // specific CCNode properties
+        o = o.replace(/\.position\s*=\s*(\w+);/g, "->setPosition($1);");
+        o = o.replace(/\.scale\s*=\s*(\w+);/g, "->setScale($1);");
+        o = o.replace(/\.anchorPoint\s*=\s*(\w+);/g, "->setAnchorPoint($1);");
+        o = o.replace(/\.tag\s*=\s*(\w+);/g, "->setTag($1);");
+        o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
+        o = o.replace(/\.zOrder\s*=\s*(\w+);/g, "->setZOrder($1);");
+        o = o.replace(/\.vertexZ\s*=\s*(\w+);/g, "->setVertexZ($1);");
+        //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
+        
 
         return o;
     };
