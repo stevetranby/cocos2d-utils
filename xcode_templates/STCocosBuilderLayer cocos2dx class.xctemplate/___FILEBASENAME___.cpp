@@ -51,24 +51,15 @@ cocos2d::SEL_MenuHandler ___FILEBASENAMEASIDENTIFIER___::onResolveCCBCCMenuItemS
     return NULL;
 }
 
-cocos2d::extension::SEL_CCControlHandler ___FILEBASENAMEASIDENTIFIER___::onResolveCCBCCControlSelector(cocos2d::CCObject* pTarget, const char * pSelectorName)
-{
-    return NULL;
-}
-
 bool ___FILEBASENAMEASIDENTIFIER___::onAssignCCBMemberVariable(cocos2d::CCObject* pTarget, const char * pMemberVariableName, cocos2d::CCNode* pNode)
 {
     CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "mySprite", CCSprite*, this->mySprite);
     return false;
 }
 
-bool ___FILEBASENAMEASIDENTIFIER___::onAssignCCBCustomProperty(CCObject* pTarget, const char* pMemberVariableName, cocos2d::extension::CCBValue* pCCBValue)
+cocos2d::extension::SEL_CCControlHandler ___FILEBASENAMEASIDENTIFIER___::onResolveCCBCCControlSelector(cocos2d::CCObject* pTarget, const char * pSelectorName)
 {
-    return false;
-}
-
-void ___FILEBASENAMEASIDENTIFIER___::onNodeLoaded(cocos2d::CCNode* pNode, cocos2d::extension::CCNodeLoader* pNodeLoader)
-{
+    return NULL;
 }
 
 #pragma mark - Action Methods
