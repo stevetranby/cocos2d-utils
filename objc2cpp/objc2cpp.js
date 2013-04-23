@@ -25,15 +25,30 @@
 
     // var objc2cpp = require('./objc2cpp.js');
     // online test: http://codepen.io/tranbonium/pen/ohLvC
+    //
+    // --OPTIONS--
+    // option:filetype (interface|implementation)
+    // option:use_cocos2d_prefix (use cocos2d prefix "cocos2d::" with types in interface)
+    // option:class_name (string to use as prefix in method names)
+    //
+    // filetype==interface:
+    // -
+    //
+    // filetype==implementation:
+    // - prepends "{class_name}::" to all non-static methods
 
     exports.initWithOptions = function(opts) {
         this.options = opts || {};
+        this.options.filetype = opts.filetype || null;
+        this.options.use_cocos2d_prefix = opts.use_cocos2d_prefix || true;
+        this.options.class_name = class_name || null;
     };
 
     // Translate objc -> objc
     // remove newlines within a method/declaration/etc
     exports.preprocess = function(input) {
         var o = input;
+        o = o.trim();
         return o;
     };
 
@@ -46,6 +61,7 @@
         // id to bool for Return Value (better practice)
         o = o.replace(/\+\(\s*id\s*\)/g, "+(bool)");
         o = o.replace(/-\(\s*id\s*\)/g, "-(bool)");
+        
         // id to CCObject* for object pointer as param or assignment
         o = o.replace(/\bid\b/g, "CCObject*");
 
@@ -59,6 +75,7 @@
     // implementations
     exports.secondPass = function(input) {
         var o = input;
+        console.log("in secondPass");
         return o;
     };
 
@@ -66,6 +83,7 @@
     // also converts all create methods (labelWithString:) to "create()"
     exports.finalPass = function(input) {
         var o = input;
+        console.log("in finalPass");
         return o;
     };
 
@@ -87,6 +105,9 @@
         };
         o = o.replace(/self.([\w]+)\s*=\s*([^;=]+)/g, selfSetReplace);
         o = o.replace(/self.([\w]+)\s/g, selfGetReplace);
+
+        var replaceStr = "$1 $2;\nCCARRAY_FOREACH($3,$2)";
+        o = o.replace(/for\s*\(([\w._]+(?:\s?\*))\s*([\w\s_.*]+)\s+in\s+([^)]+)\)/g,replaceStr);
 
         ////////////////////////////////////////////////////////////////////////////////////
         // METHOD CALLS
@@ -119,7 +140,7 @@
 
                 console.log("found match for method call");
 
-                var nParams2 = 7;
+                var nParams2 = 10;
                 for (var i2 = nParams2; i2 >= 0; --i2) {
 
                     var patternA = "";

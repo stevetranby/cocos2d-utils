@@ -9,3 +9,8 @@ Eventually I will note here that all code without a license present in the file,
 * A few files are curtesy of other projects which I will eventually link to here.
 ** Some of the code in this repository is inspired by code found online. I will eventually document where the code came from. In some cases I may have written code without knowledge of other code that is similar or [nearly] identical.
 *** Again, I will update this once I sort everything out.
+
+## TODO - CHECK THESE OUT AND INTEGRATE
+ - https://github.com/radif/MCBCallLambda
+ - https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
+ - http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/

@@ -8,7 +8,8 @@ $(document).ready(function() {
     $('#convert').click(function() {
         var input = $('#input').val();
         var converted = objc2cpp.convert(input);
-        $('#output').text(converted);
+        $('#output').val(converted);
+        $('#input').val("");
     });
 });
 </script>
