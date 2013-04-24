@@ -14,3 +14,14 @@ Eventually I will note here that all code without a license present in the file,
  - https://github.com/radif/MCBCallLambda
  - https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
  - http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/
+
+## Scroll+Menu
+ - http://www.cocos2d-x.org/boards/6/topics/21294
+ - https://github.com/cocos2d/cocos2d-iphone-extensions/tree/master/Extensions/CCMenuAdvanced
+
+## Guides
+http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
+
+## Music
+ - update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
+ - add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux

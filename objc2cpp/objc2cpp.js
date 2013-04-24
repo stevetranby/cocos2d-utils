@@ -15,6 +15,9 @@
 // Todo:
 // - for(var in array)
 // - array/dict literals
+// - convert [XXX CGPointValue] to CCPointFromString(XXX)
+// - convert [XXX CGSizeValue] to CCSizeFromString(XXX)
+// - convert [XXX CGRectValue] to CCRectFromString(XXX)
 //---------------------------------------------------------------------------
 
 (function(exports) {
@@ -55,13 +58,13 @@
     // Stuff that should be done before the main pass "convert"
     exports.firstPass = function(input) {
         var o = input;
-        
+
         console.log("in firstPass");
 
         // id to bool for Return Value (better practice)
         o = o.replace(/\+\(\s*id\s*\)/g, "+(bool)");
         o = o.replace(/-\(\s*id\s*\)/g, "-(bool)");
-        
+
         // id to CCObject* for object pointer as param or assignment
         o = o.replace(/\bid\b/g, "CCObject*");
 
@@ -106,8 +109,8 @@
         o = o.replace(/self.([\w]+)\s*=\s*([^;=]+)/g, selfSetReplace);
         o = o.replace(/self.([\w]+)\s/g, selfGetReplace);
 
-        var replaceStr = "$1 $2;\nCCARRAY_FOREACH($3,$2)";
-        o = o.replace(/for\s*\(([\w._]+(?:\s?\*))\s*([\w\s_.*]+)\s+in\s+([^)]+)\)/g,replaceStr);
+        var replaceStr = "CCObject* __obj__;\nCCARRAY_FOREACH($3,__obj__)\n{\n$1 $2 = dynamic_cast<$1>(__obj__);";
+        o = o.replace(/for\s*\(([\w._]+(?:\s?\*))\s*([\w\s_.*]+)\s+in\s+([^)]+)\)\s*\{/g, replaceStr);
 
         ////////////////////////////////////////////////////////////////////////////////////
         // METHOD CALLS
@@ -280,20 +283,20 @@
 
         var copyProperty = function(match, p1, p2) {
             // DOES NOT EXIST, either copy yourself or see if retain will work for you
-            return "CC_SYNTHESIZE_COPY(" + p1 + ", _" + p2 + ", " + p2.charAt(0).toUpperCase() + p2.substr(1) + ")";
+            return "// was a COPY\nCC_SYNTHESIZE_RETAIN(" + p1 + ", _" + p2 + ", " + p2.charAt(0).toUpperCase() + p2.substr(1) + ")";
         };
 
         // assign (weak)
-        o = o.replace(/@property \(nonatomic\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, assignProperty);
-        o = o.replace(/@property \(nonatomic,\s*assign\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, assignProperty);
-        o = o.replace(/@property \(readwrite,\s*assign\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(nonatomic\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*assign\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(readwrite,\s*assign\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
 
         // retain (strong)
-        o = o.replace(/@property \(nonatomic,\s*retain\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, retainProperty);
-        o = o.replace(/@property \(readwrite,\s*retain\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, retainProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*retain\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
+        o = o.replace(/@property\s*\(readwrite,\s*retain\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
 
         // copy (strong) - should prob use a copy constructor
-        o = o.replace(/@property \(nonatomic,\s*copy\)\s*([a-zA-Z]+)[* ]+([a-zA-Z]+)/g, copyProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*copy\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, copyProperty);
 
         ////////////////////////////////////////////////////////////////////////////////////
         // HANDLE id
@@ -310,6 +313,7 @@
 
         // Create Methods
         o = o.replace(/CCArray::array\(/g, "CCArray::create(");
+        o = o.replace(/CCArray::arrayWithCapacity\(/g, "CCArray::create(");
         o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
 
         // GENERAL
@@ -322,7 +326,6 @@
         o = o.replace(/nil/g, "NULL");
         o = o.replace(/ccTime/g, "double");
         o = o.replace(/GLfloat/g, "float");
-        
 
         // keep cocos2d:: prefix if header file
         // CGFloat => float
@@ -372,7 +375,6 @@
         o = o.replace(/\.zOrder\s*=\s*(\w+);/g, "->setZOrder($1);");
         o = o.replace(/\.vertexZ\s*=\s*(\w+);/g, "->setVertexZ($1);");
         //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
-        
 
         return o;
     };
