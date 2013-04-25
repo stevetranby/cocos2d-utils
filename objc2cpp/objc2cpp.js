@@ -40,12 +40,11 @@
     // filetype==implementation:
     // - prepends "{class_name}::" to all non-static methods
 
-    exports.initWithOptions = function(opts) {
-        this.options = opts || {};
-        this.options.filetype = opts.filetype || null;
-        this.options.use_cocos2d_prefix = opts.use_cocos2d_prefix || true;
-        this.options.class_name = class_name || null;
-    };
+    // todo: lookup init constructor for commonjs/requirejs/node/browserify
+    exports.useprefix = false;
+    exports.isheader = true;
+    exports.allgetset = false;
+    exports.classname = "";
 
     // Translate objc -> objc
     // remove newlines within a method/declaration/etc
@@ -92,8 +91,6 @@
 
     exports.convert = function(input) {
 
-        console.clear();
-
         console.log("input = " + input);
 
         var o = this.firstPass(input);
@@ -123,7 +120,7 @@
         // TODO: repeat this XX times (prob 3 is enough, should preprocess source if need more)
         // - convert multiple nested calls into separate temporary variables
 
-        for (var repeat = 10; repeat >= 0; --repeat) {
+        for (var repeat = 6; repeat >= 0; --repeat) {
             // helper to get method calls
             o = o.replace(/\[([^\]\[]+)\]/g, "--*$1=--");
 
@@ -143,7 +140,7 @@
 
                 console.log("found match for method call");
 
-                var nParams2 = 10;
+                var nParams2 = 7;
                 for (var i2 = nParams2; i2 >= 0; --i2) {
 
                     var patternA = "";
@@ -197,16 +194,20 @@
         //
         ////////////////////////////////////////////////////////////////////////////////////
 
-        var startPattern = "\\s*\\(\\s*([^\\s\\n]+)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
-        var startReplace = "$1 $2(";
-        var paramPatternFirst = ":\\s*\\(\\s*([^:;)\\s]+\\s?\\*?)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
-        var paramPattern = "\\s+[^:;\\s]+\\s*:\\s*\\(\\s*([^:)\\s]+\\s?\\*?)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
+        var prefix = exports.classname !== null && exports.classname.length > 0 ? exports.classname + "::" : "";
+
+        // variable identifier: [a-zA-Z_][a-zA-Z_0-9]+
+        // type identifier: [a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?
+        var startPattern = "\\s*\\(\\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\\*|\\s\\*)?)\\s*\\)\\s*([^:;\\s\\n]+)\\s*";
+        var startReplace = "$1 " + prefix + "$2(";
+        var paramPatternFirst = ":\\s*\\(\\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\\*|\\s\\*)?)\\s*\\)\\s*([a-zA-Z_][a-zA-Z_0-9]+)\\s*";
+        var paramPattern = "\\s+[a-zA-Z_][a-zA-Z_0-9]+\\s*:\\s*\\(\\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\\*|\\s\\*)?)\\s*\\)\\s*([a-zA-Z_][a-zA-Z_0-9]+)\\s*";
 
         if (o.match(new RegExp(startPattern))) {
 
             console.log("found match for method declaration/signature");
 
-            var nParams = 7;
+            var nParams = 8;
             for (var i = nParams; i >= 0; --i) {
                 for (var start = 0; start < 2; ++start) {
                     for (var end = 0; end < 2; ++end) {
@@ -220,18 +221,22 @@
                         else if (i == 1) pattern = startChar + startPattern + paramPatternFirst + endPattern;
                         else pattern = startChar + startPattern + endPattern;
 
-                        //console.log(pattern);
+                        console.log(pattern);
                         var regex = new RegExp(pattern, "g");
 
-                        var paramReplaces = [];
-                        for (var j = 0; j < i; ++j) {
-                            var a = 3 + j * 2;
-                            var b = 4 + j * 2;
-                            paramReplaces.push("$" + a + " $" + b);
+                        if(o.match(regex))
+                        {
+                            var paramReplaces = [];
+                            for (var j = 0; j < i; ++j)
+                            {
+                                var a = 3 + j * 2;
+                                var b = 4 + j * 2;
+                                paramReplaces.push("$" + a + " $" + b);
+                            }
+                            var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
+                            console.log("match, replacing: " + replacement);
+                            o = o.replace(regex, replacement);
                         }
-                        var replacement = startReplaceChar + startReplace + paramReplaces.join(", ") + endReplace;
-                        //console.log(replacement);
-                        o = o.replace(regex, replacement);
                     }
                 }
             }
@@ -287,16 +292,17 @@
         };
 
         // assign (weak)
-        o = o.replace(/@property\s*\(nonatomic\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
-        o = o.replace(/@property\s*\(nonatomic,\s*assign\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
-        o = o.replace(/@property\s*\(readwrite,\s*assign\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(nonatomic\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*assign\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(readwrite,\s*assign\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*readwrite\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
 
         // retain (strong)
-        o = o.replace(/@property\s*\(nonatomic,\s*retain\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
-        o = o.replace(/@property\s*\(readwrite,\s*retain\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*retain\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
+        o = o.replace(/@property\s*\(readwrite,\s*retain\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
 
         // copy (strong) - should prob use a copy constructor
-        o = o.replace(/@property\s*\(nonatomic,\s*copy\)\s*([a-zA-Z]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, copyProperty);
+        o = o.replace(/@property\s*\(nonatomic,\s*copy\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, copyProperty);
 
         ////////////////////////////////////////////////////////////////////////////////////
         // HANDLE id
@@ -310,11 +316,6 @@
         // - id action = [CCAction action] => void* action = CCAction->action();
         //
         ////////////////////////////////////////////////////////////////////////////////////
-
-        // Create Methods
-        o = o.replace(/CCArray::array\(/g, "CCArray::create(");
-        o = o.replace(/CCArray::arrayWithCapacity\(/g, "CCArray::create(");
-        o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
 
         // GENERAL
         o = o.replace(/@"/g, "\"");
@@ -343,7 +344,8 @@
         o = o.replace(/CGSize/g, "CCSize");
         o = o.replace(/CGRect/g, "CCRect");
         o = o.replace(/CGFloat/g, "float");
-        o = o.replace(/ccTime/g, "ccTime");
+        o = o.replace(/ccTime/g, "double");
+        o = o.replace(/NSInteger/g, "int");
 
         // NSMutableArray => cocos2d::CCArray
         // NSMutableDictionary => cocos2d::CCDictionary
@@ -359,6 +361,41 @@
         o = o.replace(/SCLabel/g, "CCLabelBMFont");
         o = o.replace(/CCLabelTTF/g, "CCLabelBMFont");
 
+        // If use prefix, go through and check for any not prefixed
+        // for now we'll prefix everything using new checks, could litter
+        // throughout the rest of the code instead, but this is hopefully a
+        // bit more clean
+        var ccprefix = exports.useprefix ? "cocos2d::" : "";
+        if(exports.useprefix)
+        {
+            o = o.replace(/([^:])(CCLabelBMFont)/g, "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCPoint)/g,       "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCSize)/g,        "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCRect)/g,        "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCPoint)/g,       "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCSize)/g,        "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCRect)/g,        "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCObject)/g, "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCArray)/g,       "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCDictionary)/g,  "$1" + ccprefix + "$2");
+            o = o.replace(/([^:])(CCString)/g,      "$1" + ccprefix + "$2");
+        }
+        
+
+        // Create Methods
+        o = o.replace(/CCArray::array\(/g, "CCArray::create(");
+        o = o.replace(/CCArray::arrayWithCapacity\(/g, "CCArray::create(");
+        o = o.replace(/CCDictionary::dictionary\(/g, "CCDictionary::create(");
+        o = o.replace(/CCDictionary::dictionaryWithCapaticy\(/g, "CCDictionary::create(");
+        o = o.replace(/CCDictionary::dictionaryWithObjectsAndKeys\(/g, "CCDictionary::create(");
+        o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
+
+        o = o.replace(/CCDelayTime::actionWithDuration\(/g, "CCDelayTime::create(");
+        o = o.replace(/CCSequence::actions\(/g, "CCSequence::create(");
+        o = o.replace(/CCRepeat::actionWithAction\(/g, "CCRepeat::create(");
+        o = o.replace(/CCAnimate::actionWithAnimation\(/g, "CCAnimate::create(");
+        o = o.replace(/CCCallFunc::actionWithTarget\(/g, "CCCallFunc::create(");
+
         // REMOVE SYNTAX
         // @class ...
         // @end
@@ -366,7 +403,30 @@
         o = o.replace(/@class /g, "class ");
         o = o.replace(/@end/g, "");
 
+        // THIS SHOULD PROB BE A SEPARATE TOOL????
+        // - mainly necessary for factories and inits
         // specific CCNode properties
+        if(exports.allgetset)
+        {
+            var capitalize = function(string)
+            {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            };
+
+            var replaceSetter = function(match, varname, propname, value) {
+                return varname + "->set" + capitalize(propname) + "(" + value + ");";
+            };
+            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\s*=\s*([^;]+);/g, replaceSetter);
+
+            // after to prevent converting the setter lvalue before it can exec
+            var replaceGetter = function(match, varname, propname) {
+                return varname + "->get" + capitalize(propname) + "()";
+            };
+            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\b/g, replaceGetter);
+
+        }
+        
+        // todo: figure out how to have getPROPERTY work with regex, maybe after the conversion on a post pass?
         o = o.replace(/\.position\s*=\s*(\w+);/g, "->setPosition($1);");
         o = o.replace(/\.scale\s*=\s*(\w+);/g, "->setScale($1);");
         o = o.replace(/\.anchorPoint\s*=\s*(\w+);/g, "->setAnchorPoint($1);");
@@ -375,6 +435,10 @@
         o = o.replace(/\.zOrder\s*=\s*(\w+);/g, "->setZOrder($1);");
         o = o.replace(/\.vertexZ\s*=\s*(\w+);/g, "->setVertexZ($1);");
         //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
+
+        // ....
+        o = o.replace(/->isEqualToString\(/g, "->isEqual(");
+
 
         return o;
     };
