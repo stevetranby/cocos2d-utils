@@ -14,6 +14,7 @@ Eventually I will note here that all code without a license present in the file,
  - https://github.com/radif/MCBCallLambda
  - https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
  - http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/
+ - https://github.com/dualface/cocos2d-x-extensions
 
 ## Scroll+Menu
  - http://www.cocos2d-x.org/boards/6/topics/21294
@@ -25,3 +26,6 @@ http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
 ## Music
  - update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
  - add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux
+http://cocos2d-x.org/attachments/468/Cocos2dxMusic.java
+http://developer.android.com/guide/topics/media/mediaplayer.html
+http://cocos2d-x.org/boards/6/topics/14460?r=14525#message-14525

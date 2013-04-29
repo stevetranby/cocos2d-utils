@@ -287,8 +287,8 @@
         };
 
         var copyProperty = function(match, p1, p2) {
-            // DOES NOT EXIST, either copy yourself or see if retain will work for you
-            return "// was a COPY\nCC_SYNTHESIZE_RETAIN(" + p1 + ", _" + p2 + ", " + p2.charAt(0).toUpperCase() + p2.substr(1) + ")";
+            // DOES NOT EXIST, use macro
+            return "CC_SYNTHESIZE_COPY(" + p1 + ", _" + p2 + ", " + p2.charAt(0).toUpperCase() + p2.substr(1) + ")";
         };
 
         // assign (weak)
@@ -296,6 +296,7 @@
         o = o.replace(/@property\s*\(nonatomic,\s*assign\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
         o = o.replace(/@property\s*\(readwrite,\s*assign\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
         o = o.replace(/@property\s*\(nonatomic,\s*readwrite\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
+        o = o.replace(/@property\s*\(readwrite\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, assignProperty);
 
         // retain (strong)
         o = o.replace(/@property\s*\(nonatomic,\s*retain\)\s*([a-zA-Z_][a-zA-Z_0-9]+(?:\*|\s\*)?)\s*([a-zA-Z]+)/g, retainProperty);
@@ -385,16 +386,22 @@
         // Create Methods
         o = o.replace(/CCArray::array\(/g, "CCArray::create(");
         o = o.replace(/CCArray::arrayWithCapacity\(/g, "CCArray::create(");
+        o = o.replace(/CCArray::arrayWithObject\(/g, "CCArray::create(");
         o = o.replace(/CCDictionary::dictionary\(/g, "CCDictionary::create(");
         o = o.replace(/CCDictionary::dictionaryWithCapaticy\(/g, "CCDictionary::create(");
         o = o.replace(/CCDictionary::dictionaryWithObjectsAndKeys\(/g, "CCDictionary::create(");
         o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
-
         o = o.replace(/CCDelayTime::actionWithDuration\(/g, "CCDelayTime::create(");
         o = o.replace(/CCSequence::actions\(/g, "CCSequence::create(");
         o = o.replace(/CCRepeat::actionWithAction\(/g, "CCRepeat::create(");
         o = o.replace(/CCAnimate::actionWithAnimation\(/g, "CCAnimate::create(");
         o = o.replace(/CCCallFunc::actionWithTarget\(/g, "CCCallFunc::create(");
+        o = o.replace(/CCMoveBy::actionWithDuration\(/g, "CCMoveBy::create(");
+        o = o.replace(/CCLabelBMFont::labelWithString\(/g, "CCLabelBMFont::create(");
+        o = o.replace(/CCLayerColor::layerWithColor\(/g, "CCLayerColor::create(");
+        o = o.replace(/CCTintTo::actionWithDuration\(/g, "CCTintTo::create(");
+        o = o.replace(/CCRepeatForever::actionWithAction\(/g, "CCRepeatForever::create(");
+
 
         // REMOVE SYNTAX
         // @class ...
@@ -412,20 +419,38 @@
             {
                 return string.charAt(0).toUpperCase() + string.slice(1);
             };
+            
+            var replaceSetterGetter = function(match, varname, propname, value) {
+                return varname + "->set" + capitalize(propname) + "(" + varname + "->get" + capitalize(propname) + "() + " + value + ");";
+            };
+            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\s*\+=\s*([^=;]+);/g, replaceSetterGetter);
+
+            var replaceSetterMinusGetter = function(match, varname, propname, value) {
+                return varname + "->set" + capitalize(propname) + "(" + varname + "->get" + capitalize(propname) + "() - " + value + ");";
+            };
+            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\s*-=\s*([^=;]+);/g, replaceSetterMinusGetter);
 
             var replaceSetter = function(match, varname, propname, value) {
                 return varname + "->set" + capitalize(propname) + "(" + value + ");";
             };
-            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\s*=\s*([^;]+);/g, replaceSetter);
+            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\s*=\s*([^=;]+);/g, replaceSetter);
 
             // after to prevent converting the setter lvalue before it can exec
+            // todo: add ability to prevent selecting . inside a string
             var replaceGetter = function(match, varname, propname) {
+                if(propname === "width" || propname === "height" || propname === "x" || propname === "y" || propname === "size" || propname === "origin" || propname === "png" || propname === "ccz" || propname === "jpg")
+                {
+                    return varname + "." + propname;
+                }
                 return varname + "->get" + capitalize(propname) + "()";
             };
-            o = o.replace(/\b([a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\b/g, replaceGetter);
+            o = o.replace(/(\)|\b[a-zA-Z_][a-zA-Z_0-9]+)\.([a-zA-Z_][a-zA-Z_0-9]+)\b/g, replaceGetter);
 
         }
         
+        // ....
+        o = o.replace(/->isEqualToString\(@?"([^"]+)"\)/g, "->isEqual(ccs(\"$1\"))");
+
         // todo: figure out how to have getPROPERTY work with regex, maybe after the conversion on a post pass?
         o = o.replace(/\.position\s*=\s*(\w+);/g, "->setPosition($1);");
         o = o.replace(/\.scale\s*=\s*(\w+);/g, "->setScale($1);");
@@ -436,8 +461,16 @@
         o = o.replace(/\.vertexZ\s*=\s*(\w+);/g, "->setVertexZ($1);");
         //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
 
-        // ....
-        o = o.replace(/->isEqualToString\(/g, "->isEqual(");
+
+        // DO GETS LAST
+        o = o.replace(/\.position\b/g, "->getPosition()");
+        o = o.replace(/\.scale\b/g, "->getScale()");
+        o = o.replace(/\.anchorPoint\b/g, "->setAnchorPoint()");
+        o = o.replace(/\.tag\b/g, "->getTag()");
+        o = o.replace(/\.opacity\b/g, "->getOpacity()");
+        o = o.replace(/\.zOrder\b/g, "->getZOrder()");
+        o = o.replace(/\.vertexZ\b/g, "->getVertexZ()");
+        //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
 
 
         return o;
