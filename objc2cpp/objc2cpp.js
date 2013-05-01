@@ -64,6 +64,7 @@
         o = o.replace(/\+\(\s*id\s*\)/g, "+(bool)");
         o = o.replace(/-\(\s*id\s*\)/g, "-(bool)");
 
+        // TODO: could possibly use 'auto' instead of CCObject* if supported
         // id to CCObject* for object pointer as param or assignment
         o = o.replace(/\bid\b/g, "CCObject*");
 
@@ -106,7 +107,7 @@
         o = o.replace(/self.([\w]+)\s*=\s*([^;=]+)/g, selfSetReplace);
         o = o.replace(/self.([\w]+)\s/g, selfGetReplace);
 
-        var replaceStr = "CCObject* __obj__;\nCCARRAY_FOREACH($3,__obj__)\n{\n$1 $2 = dynamic_cast<$1>(__obj__);";
+        var replaceStr = "CCObject* __obj__;\nCCARRAY_FOREACH($3,__obj__)\n{\n$1 $2 = static_cast<$1>(__obj__);";
         o = o.replace(/for\s*\(([\w._]+(?:\s?\*))\s*([\w\s_.*]+)\s+in\s+([^)]+)\)\s*\{/g, replaceStr);
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -319,14 +320,16 @@
         ////////////////////////////////////////////////////////////////////////////////////
 
         // GENERAL
-        o = o.replace(/@"/g, "\"");
+        // first convert to c++ string identifiers so we don't replace %@" with %s"
+        o = o.replace(/%@/g, "%s");
+        o = o.replace(/@\"/g, "\"");
         o = o.replace(/import/g, "include");
         o = o.replace(/self/g, "this");
         o = o.replace(/YES/g, "true");
         o = o.replace(/BOOL/g, "bool");
         o = o.replace(/NO/g, "false");
         o = o.replace(/nil/g, "NULL");
-        o = o.replace(/ccTime/g, "double");
+        o = o.replace(/ccTime/g, "float"); // could do double? I believe CCNode defines as double in update()
         o = o.replace(/GLfloat/g, "float");
 
         // keep cocos2d:: prefix if header file
@@ -345,8 +348,12 @@
         o = o.replace(/CGSize/g, "CCSize");
         o = o.replace(/CGRect/g, "CCRect");
         o = o.replace(/CGFloat/g, "float");
+        o = o.replace(/UITouch/g, "CCTouch");
+        o = o.replace(/UIEvent/g, "CCEvent");
         o = o.replace(/ccTime/g, "double");
+        o = o.replace(/NSTimeInterval/g, "double");
         o = o.replace(/NSInteger/g, "int");
+        
 
         // NSMutableArray => cocos2d::CCArray
         // NSMutableDictionary => cocos2d::CCDictionary
@@ -381,28 +388,33 @@
             o = o.replace(/([^:])(CCDictionary)/g,  "$1" + ccprefix + "$2");
             o = o.replace(/([^:])(CCString)/g,      "$1" + ccprefix + "$2");
         }
-        
 
         // Create Methods
+        o = o.replace(/CCAnimate::actionWithAnimation\(/g, "CCAnimate::create(");
         o = o.replace(/CCArray::array\(/g, "CCArray::create(");
         o = o.replace(/CCArray::arrayWithCapacity\(/g, "CCArray::create(");
         o = o.replace(/CCArray::arrayWithObject\(/g, "CCArray::create(");
+        o = o.replace(/CCArray::arrayWithObjects\(/g, "CCArray::create(");
+        o = o.replace(/CCDelayTime::actionWithDuration\(/g, "CCDelayTime::create(");
         o = o.replace(/CCDictionary::dictionary\(/g, "CCDictionary::create(");
         o = o.replace(/CCDictionary::dictionaryWithCapaticy\(/g, "CCDictionary::create(");
         o = o.replace(/CCDictionary::dictionaryWithObjectsAndKeys\(/g, "CCDictionary::create(");
-        o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
-        o = o.replace(/CCDelayTime::actionWithDuration\(/g, "CCDelayTime::create(");
-        o = o.replace(/CCSequence::actions\(/g, "CCSequence::create(");
-        o = o.replace(/CCRepeat::actionWithAction\(/g, "CCRepeat::create(");
-        o = o.replace(/CCAnimate::actionWithAnimation\(/g, "CCAnimate::create(");
         o = o.replace(/CCCallFunc::actionWithTarget\(/g, "CCCallFunc::create(");
-        o = o.replace(/CCMoveBy::actionWithDuration\(/g, "CCMoveBy::create(");
+        o = o.replace(/CCFadeIn::actionWithDuration\(/g, "CCFadeIn::create(");
         o = o.replace(/CCLabelBMFont::labelWithString\(/g, "CCLabelBMFont::create(");
         o = o.replace(/CCLayerColor::layerWithColor\(/g, "CCLayerColor::create(");
-        o = o.replace(/CCTintTo::actionWithDuration\(/g, "CCTintTo::create(");
+        o = o.replace(/CCMenu::menuWithItems\(/g, "CCMenu::create(");
+        o = o.replace(/CCMenuItemSprite::itemWithNormalSprite:\(/g, "CCMenuItemSprite::create(");
+        o = o.replace(/CCMoveBy::actionWithDuration\(/g, "CCMoveBy::create(");
+        o = o.replace(/CCMoveTo::actionWithDuration\(/g, "CCMoveTo::create(");
+        o = o.replace(/CCProgressTimer::progressWithSprite\(/g, "CCProgressTimer::create(");
+        o = o.replace(/CCRepeat::actionWithAction\(/g, "CCRepeat::create(");
         o = o.replace(/CCRepeatForever::actionWithAction\(/g, "CCRepeatForever::create(");
-
-
+        o = o.replace(/CCSequence::actions\(/g, "CCSequence::create(");
+        o = o.replace(/CCSprite::spriteWithFile\(/g, "CCSprite::create(");
+        o = o.replace(/CCTintTo::actionWithDuration\(/g, "CCTintTo::create(");
+        o = o.replace(/CCFadeOut::actionWithDurationo\(/g, "CCFadeOut::create(");
+        
         // REMOVE SYNTAX
         // @class ...
         // @end

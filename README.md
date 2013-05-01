@@ -14,6 +14,7 @@ Eventually I will note here that all code without a license present in the file,
  - https://github.com/radif/MCBCallLambda
  - https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
  - http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/
+ - https://github.com/cocos2d/cocos2d-x-extensions
  - https://github.com/dualface/cocos2d-x-extensions
 
 ## Scroll+Menu
@@ -29,3 +30,11 @@ http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
 http://cocos2d-x.org/attachments/468/Cocos2dxMusic.java
 http://developer.android.com/guide/topics/media/mediaplayer.html
 http://cocos2d-x.org/boards/6/topics/14460?r=14525#message-14525
+
+
+## Arrays & Dictionaries (Conversion)
+http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCArray
+http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Reference_Count_and_AutoReleasePool_in_Cocos2d-x
+http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCString
+http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCDictionary
+http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
