@@ -25,12 +25,11 @@ Eventually I will note here that all code without a license present in the file,
 http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
 
 ## Music
- - update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
- - add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux
+update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
+add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux
 http://cocos2d-x.org/attachments/468/Cocos2dxMusic.java
 http://developer.android.com/guide/topics/media/mediaplayer.html
 http://cocos2d-x.org/boards/6/topics/14460?r=14525#message-14525
-
 
 ## Arrays & Dictionaries (Conversion)
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCArray
@@ -38,3 +37,11 @@ http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Reference_Count_and_AutoRelease
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCString
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCDictionary
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
+
+## NOTES
+- always initialize everything (use constructor, regex find/replace helper)
+- create copyWithZone for all or at least any CCObject subclasses that will be in an array that's copied
+
+## MACROS
+- maybe SAFE_REMOVESELF (remove from parent with null check of property calling "remove")
+  convert node->getChildByTag(tag)->removeFromParent();this->setNode(NULL); TO removechildbytag

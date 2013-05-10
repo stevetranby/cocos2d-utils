@@ -413,8 +413,12 @@
         o = o.replace(/CCSequence::actions\(/g, "CCSequence::create(");
         o = o.replace(/CCSprite::spriteWithFile\(/g, "CCSprite::create(");
         o = o.replace(/CCTintTo::actionWithDuration\(/g, "CCTintTo::create(");
-        o = o.replace(/CCFadeOut::actionWithDurationo\(/g, "CCFadeOut::create(");
-        
+        o = o.replace(/CCFadeOut::actionWithDuration\(/g, "CCFadeOut::create(");
+        o = o.replace(/STRemoveFromParentAction::actionWithCleanup\(/g, "CCRemoveSelf::create(");
+        o = o.replace(/CCShow::action\(/g, "CCShow::create(");
+        o = o.replace(/CCHide::action\(/g, "CCHide::create(");
+        o = o.replace(/CCBlink::actionWithDuration\(/g, "CCBlink::create(");
+        o = o.replace(/CCScaleTo::::actionWithDuration\(/g, "CCScaleTo::create(");
         // REMOVE SYNTAX
         // @class ...
         // @end
@@ -484,6 +488,11 @@
         o = o.replace(/\.vertexZ\b/g, "->getVertexZ()");
         //o = o.replace(/\.opacity\s*=\s*(\w+);/g, "->setOpacity($1);");
 
+
+        // Didn't get around to replacing method calls, so assume it was a value array
+        // - it'll look like the message syntax didn't convert otherwise which is fine
+        o = o.replace("--*", "[");
+        o = o.replace("=--", "]");
 
         return o;
     };
