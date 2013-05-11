@@ -419,6 +419,11 @@
         o = o.replace(/CCHide::action\(/g, "CCHide::create(");
         o = o.replace(/CCBlink::actionWithDuration\(/g, "CCBlink::create(");
         o = o.replace(/CCScaleTo::::actionWithDuration\(/g, "CCScaleTo::create(");
+        o = o.replace(/CCLayerGradient::layerWithColor\(/g, "CCLayerGradient::create(");
+            
+
+
+
         // REMOVE SYNTAX
         // @class ...
         // @end

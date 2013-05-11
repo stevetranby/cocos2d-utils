@@ -38,6 +38,26 @@ http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCString
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCDictionary
 http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
 
+## Memory Management (notes to cleanup, some related to both, some to c++)
+Look for any retains in iPhone code, make sure all CCArray/CCDictionary are created before attempting use, or initialize to NULL and check for null. Double check your retain/release pairing, so once converted to c++ code  do a search of all code for ->retain() and make sure a corresponding CC_SAFE_RELEASE_NULL is called either in the destructor or wherever [OBJECT release] was called in the iPhone code, or if not determine where it should go.
+
+Rembmer objC handles sending messages to nil references gracefully. This is a double edged sword, and with c++ you have to be explicit in handling of NULL references. Either make sure that any potential allowed path through the code will have a valid reference (no NULL check necessary, but will crash), or make sure to check for NULL and only operate on that node or object if reference is valid.
+
+While c++ can be a bit annoying after translating right away, it actually is helpful in that the code will crash either at the given method call on a NULL/invalid instance or it will crash in a release method.
+
+Also, remember the retain,remove,release sequence when acting on an object you remove from container.
+
+    node = (CCNode*)nodeArray->objectAtIndex(index);
+    node->retain();
+    // do stuff
+    nodeArray->removeObjectAtIndex(index);
+    // do stuff
+    node->release();
+
+Utilize weak references where possible. CC_SYNTHESIZE instead of CC_SYNTHESIZE_RETAIN. Create nodes and add as children, keep weak reference or use tag to get/remove.
+
+Unless CCObject/subclass field is added as a child to another node, you probably need it to be a strong property using CC_SYNTHESIZE_RETAIN(), make sure to safe release these in destructor.
+
 ## NOTES
 - always initialize everything (use constructor, regex find/replace helper)
 - create copyWithZone for all or at least any CCObject subclasses that will be in an array that's copied
@@ -45,3 +65,5 @@ http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
 ## MACROS
 - maybe SAFE_REMOVESELF (remove from parent with null check of property calling "remove")
   convert node->getChildByTag(tag)->removeFromParent();this->setNode(NULL); TO removechildbytag
+
+=== PLEASE FEEL FREE TO CONTACT ME OR FILE AN ISSUE IF ANYTHING HERE IS NOT CORRECT ===
