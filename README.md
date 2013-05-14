@@ -1,42 +1,50 @@
 ## cocos2d-utils
 
-Various utility classes or tools for working with Cocos2D (-iphone,-x,-html)
+Various utility classes or tools for working with Cocos2D (-iphone,-x,-html) and porting from ObjC to C++.
+
+It goes without saying that if you plan to use Cocos2D-X in any capacity in the future it would be better to start out using it, whether to write everything in c++ or as the underlying engine to use with Javascript/Lua. However, if you want to convert an iOS project there are a couple tools and templates here to utilize.
+
+There are businesses promoting tools and frameworks for running objC/cocos2d code on top of a custom runtime, but after looking at the ones available I decided it would be more efficient to just port the code base and move over to c++ entirely. YMMV.
 
 Disclaimer & Licensing:
 
 Eventually I will note here that all code without a license present in the file, or otherwise expressed in this readme or other license.txt files in this repository will be given permission under the MIT license. Currently, however, this is just a dump of stuff that I have not sorted through, so for now you'll have to assume any files is licensed elsewhere or is copyright of Steve Tranby.
 
-* A few files are curtesy of other projects which I will eventually link to here.
-** Some of the code in this repository is inspired by code found online. I will eventually document where the code came from. In some cases I may have written code without knowledge of other code that is similar or [nearly] identical.
-*** Again, I will update this once I sort everything out.
+- * A few files are curtesy of other projects which I will eventually link to here.
+- ** Some of the code in this repository is inspired by code found online. I will eventually document where the code came from. In some cases I may have written code without knowledge of other code that is similar or [nearly] identical.
+- *** Again, I will update this once I sort everything out.
+
+Also, once organized I will likely move the extensions specific to Cocos2d-iphone/-x to the respective forks from the main repositories. Everything else may remain in this repository, or may be separated out. This note is mainly to make sure others don't fork this with the idea that it's finished or necessarily production-ready code, but instead is posted in case someone finds something useful or for future integration/collaboration.
+
+Lastly, this is all stuff I have done to attempt to port a game as quickly as possible from iOS to cross platform. There are things on the objective-C / cocos2d-iPhone side that I could have been doing while coding to make the translation easier, but were done in a manner to make coding in the iOS specific platform better.
 
 ## TODO - CHECK THESE OUT AND INTEGRATE
- - https://github.com/radif/MCBCallLambda
- - https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
- - http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/
- - https://github.com/cocos2d/cocos2d-x-extensions
- - https://github.com/dualface/cocos2d-x-extensions
+- https://github.com/radif/MCBCallLambda
+- https://github.com/ivzave/cocos2dx-ext/blob/master/CCGeometryExtended.h
+- http://yui.co/make-ccscrollview-work-with-ccmenuitemimage/
+- https://github.com/cocos2d/cocos2d-x-extensions
+- https://github.com/dualface/cocos2d-x-extensions
 
 ## Scroll+Menu
- - http://www.cocos2d-x.org/boards/6/topics/21294
- - https://github.com/cocos2d/cocos2d-iphone-extensions/tree/master/Extensions/CCMenuAdvanced
+- http://www.cocos2d-x.org/boards/6/topics/21294
+- https://github.com/cocos2d/cocos2d-iphone-extensions/tree/master/Extensions/CCMenuAdvanced
 
 ## Guides
-http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
+- http://gameit.ro/2011/09/performing-a-selector-after-a-delay-in-cocos2d-x/
 
 ## Music
-update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
-add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux
-http://cocos2d-x.org/attachments/468/Cocos2dxMusic.java
-http://developer.android.com/guide/topics/media/mediaplayer.html
-http://cocos2d-x.org/boards/6/topics/14460?r=14525#message-14525
+- update/extend/replace Cocos2dxMusic.java to support seekTo and any other methods
+- add these methods to CocosDenshion/{android,ios} and eventually win32/mac/linux
+- http://cocos2d-x.org/attachments/468/Cocos2dxMusic.java
+- http://developer.android.com/guide/topics/media/mediaplayer.html
+- http://cocos2d-x.org/boards/6/topics/14460?r=14525#message-14525
 
 ## Arrays & Dictionaries (Conversion)
-http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCArray
-http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Reference_Count_and_AutoReleasePool_in_Cocos2d-x
-http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCString
-http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCDictionary
-http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
+- http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCArray
+- http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Reference_Count_and_AutoReleasePool_in_Cocos2d-x
+- http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCString
+- http://www.cocos2d-x.org/projects/cocos2d-x/wiki/CCDictionary
+- http://www.cocos2d-x.org/projects/cocos2d-x/wiki/Moving_From_Objective-C_to_C++
 
 ## Memory Management (notes to cleanup, some related to both, some to c++)
 Look for any retains in iPhone code, make sure all CCArray/CCDictionary are created before attempting use, or initialize to NULL and check for null. Double check your retain/release pairing, so once converted to c++ code  do a search of all code for ->retain() and make sure a corresponding CC_SAFE_RELEASE_NULL is called either in the destructor or wherever [OBJECT release] was called in the iPhone code, or if not determine where it should go.
@@ -64,6 +72,6 @@ Unless CCObject/subclass field is added as a child to another node, you probably
 
 ## MACROS
 - maybe SAFE_REMOVESELF (remove from parent with null check of property calling "remove")
-  convert node->getChildByTag(tag)->removeFromParent();this->setNode(NULL); TO removechildbytag
+- convert all node->getChildByTag(tag)->removeFromParent(); this->setNode(NULL); TO removechildbytag
 
 === PLEASE FEEL FREE TO CONTACT ME OR FILE AN ISSUE IF ANYTHING HERE IS NOT CORRECT ===
