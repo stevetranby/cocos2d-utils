@@ -111,6 +111,15 @@ Utilize weak references where possible. CC_SYNTHESIZE instead of CC_SYNTHESIZE_R
 
 Unless CCObject/subclass field is added as a child to another node, you probably need it to be a strong property using CC_SYNTHESIZE_RETAIN(), make sure to safe release these in destructor.
 
+
+Convert C++ CC_PROP/SYNTH_ to Constructor Initializers
+FIND: CC_\w+(?:_\w+)?\([^,]+,\s?([^,]+),[^;]+;
+FIND: ^.+\s\*?(\w+);
+REPL: , \1(NULL)
+
+FIND: (\w+[\s*]+)([^;]+);
+REPL: CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "\2", \1, \2);
+
 # NOTES
 - always initialize everything (use constructor, regex find/replace helper)
 - create copyWithZone for all or at least any CCObject subclasses that will be in an array that's copied
