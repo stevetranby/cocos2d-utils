@@ -1,0 +1,69 @@
+<html>
+<head>
+<style>
+body {
+  font-size: 0.8em;
+  font-family: Helvetica, sans-serif;
+}
+</style>
+<!--<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>-->
+<script src="jquery-1.9.1.min.js"></script>
+<script src="objc2cpp.js"></script>
+</head>
+<body>
+<h4>cocos2d objc->cpp transform</h4>
+<div>[CLASSNAME] to prefix methods e.g. void [CLASSNAME]::method(int a, int b)
+<input type="text" id="class-name" size="40" /> </div>
+<div><input type="checkbox" id="use-prefix" value="1" />
+<label for="use-prefix">Use [cocos2d::] Prefix as qualifier e.g. cocos2d::CCString instead of CCString</label></div>
+<div><input type="checkbox" id="change-setters" value="1" />
+<label for="change-setters">Look for and modify get(set)ters for any variable name (instead of just self.property)</label></div>
+<div><button id="loadTest">Load Test Sample</button></div>
+<div><textarea id="input" rows="15" cols="70" wrap="off"></textarea></div>
+<div>
+  <button id="convert">Convert</button>
+  <br />
+  * for now it's better to use a reasonably "small" amount of code for faster processing
+  * for(type* obj in set) are converted to CCARRAY_FOREACH due to dumb regex processing
+  *
+</div>
+<textarea id="output" rows="30" cols="70" wrap="off"></textarea>
+</body>
+</html>
+<script>
+var testObjc;
+$(document).ready(function()
+{
+    $('#loadTest').click(function()
+    {
+        var inStr = testObjc | "";
+        $('#input').val(testObjc);
+    });
+
+    $('#convert').click(function()
+    {
+        // get inputs and form vals
+        var input = $('#input').val();
+        var pUsePrefix = $('#use-prefix').is(':checked');
+        var pClassName = $('#class-name').val();
+        var pChangeSetters = $('#change-setters').is(':checked');
+
+        // todo: can obviously use a constructor instead
+        //       or other init/config/options pattern
+
+        // setup objc2cpp
+        objc2cpp.useprefix = pUsePrefix || false;
+        objc2cpp.allgetset = pChangeSetters || false;
+        objc2cpp.classname = pClassName || "";
+
+        console.log(objc2cpp.useprefix);
+        console.log(objc2cpp.allgetset);
+        console.log(objc2cpp.classname);
+
+        var converted = objc2cpp.convert(input);
+        $('#output').val(converted);
+        $('#input').val("");
+    });
+});
+testObjc = "\n#import \"cocos2d.h\"\n#import \"CCBReader.h\"\n#import \"SimpleAudioEngine.h\"\n\n@interface ClassName: CCNode\n@property (readwrite, retain) NSMutableArray *touches;\n@property (readwrite, assign) BOOL isDisabled;\n@end\n\n@interface ClassNameOne (category)\n@property (readwrite, retain) NSMutableArray *touches;\n@end\n\n@interface ClassNameTwo ()\n{\n    NSMutableArray* _memberOne;\n    NSMutableArray* _memberTwo;\n}\n+(EventManager*)sharedManager;\n@property (readwrite, retain) NSMutableArray *touches;\n@property (readwrite, assign) CGFloat touchDistance;\n\n+(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3;\n- (CGFloat) horzSpeedWithPosition: (CGPoint) pos;\n- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2;\n- (void) layerPanZoom: (STLayerPanZoom *) sender \n       clickedAtPoint: (CGPoint) aPoint\n             tapCount: (NSUInteger) tapCount;\n@end\n\n+(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3;\n- (CGFloat) horzSpeedWithPosition  : ( CGPoint) pos;\n- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2;\n- (void) layerPanZoom: (STLayerPanZoom *) sender  clickedAtPoint: (CGPoint) aPoint tapCount: (NSUInteger) tapCount;\n- (void) layerPanZoom: (STLayerPanZoom *) sender \n       clickedAtPoint: (CGPoint) aPoint\n             tapCount: (NSUInteger) tapCount;\n\n@implementation ClassName\n\n-(CCAnimation*)addAnimationWithName:(NSString*)animName\n                             Format:(NSString*)animFormat\n                             Frames:(NSString*)animFrames\n                              Delay:(float)animDelay\n{\n    if([_animationConfigs objectForKey:animName])\n        return;\n\n    id dict = [NSDictionary dictionaryWithObjectsAndKeys:\n               animFormat, @\"format\",\n               animName, @\"name\",\n               animFrames, @\"frames\",\n               @(animDelay), @\"delay\",\n               nil];\n\n    [_animationConfigs setObject:dict forKey:animName];\n\n    return [animCache animationByName:animName];\n}\n\n- (void) ccTouchesEnded: (NSSet *) touches \n              withEvent: (UIEvent *) event\n{\n    self.speed = 100;\n    self.position = ccp(3,4);\n    UITouch *touch2 = [self.touches objectAtIndex: 1];\n    CGPoint curPosTouch1 = [[CCDirector sharedDirector] convertToGL: [touch1 locationInView: [touch1 view]]];\n    [self.delegate layerPanZoom: self\n                 clickedAtPoint: [self convertToNodeSpace: curPos]\n                       tapCount: [touch tapCount]];\n}\n\n@end\n\n+(id)methodName:(Type1*)param1 NameTwo:(Type2)param2 NameThree:(Type3*)param3 \n{\n}\n- (CGFloat) horzSpeedWithPosition  : ( CGPoint) pos\n{\n}\n- (CGFloat) vertSpeedWithPosition: (CGPoint) pos AnotherParam:(NSString*)param2 {\n}\n\n- (void) layerPanZoom: (STLayerPanZoom *) sender \n       clickedAtPoint: (CGPoint) aPoint\n             tapCount: (NSUInteger) tapCount\n{\n  for(NSString* str in mystrings)\n  {\n    //  since tr\n    [self.me asdf];\n    int a = self.asdf;\n    [poo self.tasdf];\n    self.asdf=3;\n    self.test = 100;\n  }\n}\n\nNSString* test = @\"meh\";\nif([test isEqualToString:@\"asdf\"])\ntest = @\"heh\";\n";
+</script>
